@@ -1,0 +1,13 @@
+# Build artifacts
+/sidecar-connect
+/dump-api
+*.o
+*.swiftmodule
+*.dSYM/
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
