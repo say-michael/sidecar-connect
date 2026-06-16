@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent template for auto-connecting Sidecar on login.
+
+  `make install-agent` substitutes __BINDIR__ for your actual install path and
+  copies this to ~/Library/LaunchAgents/com.user.sidecar-connect.plist.
+
+  Edit the device name ("iPad") to a substring of your device if needed. The
+  `--wait 60` is important: at login the iPad isn't discovered instantly, so we
+  poll for up to 60s before giving up. This is a one-shot connect (no KeepAlive),
+  so it runs once at login and exits.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>          <string>com.user.sidecar-connect</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__BINDIR__/sidecar-connect</string>
+        <string>connect</string>
+        <string>iPad</string>
+        <string>--wait</string>
+        <string>60</string>
+        <string>--quiet</string>
+    </array>
+    <key>RunAtLoad</key>      <true/>
+    <key>ProcessType</key>    <string>Interactive</string>
+</dict>
+</plist>
