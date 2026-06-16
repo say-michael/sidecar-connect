@@ -29,7 +29,10 @@ menu.
 ## Features
 
 - **`connect` / `disconnect` / `toggle`** a Sidecar device by name (or the first one found).
-- **`list`** nearby and currently-connected devices.
+- **`list`** nearby and currently-connected devices (`--json` for scripting).
+- **`status`** with a meaningful exit code (0 = connected, 3 = not) for scripts and menu-bar tools.
+- **`--wait <seconds>`** polls for the device to appear before acting — makes login auto-connect reliable.
+- **`--no-sidebar` / `--no-touchbar`** to connect without the on-screen sidebar / Touch Bar.
 - **Headless** — no UI scripting, no Accessibility permissions, no screen required.
 - Single self-contained binary, no dependencies beyond the Swift toolchain to build.
 
@@ -70,14 +73,23 @@ swiftc -O src/main.swift -o sidecar-connect && cp sidecar-connect /usr/local/bin
 ## Usage
 
 ```text
-sidecar-connect <command> [name]
+sidecar-connect <command> [name] [options]
 
 Commands:
   list                 List nearby/connected Sidecar devices ( ● = connected )
   connect [name]       Connect to a device (name = case-insensitive substring)
   disconnect [name]    Disconnect from a device
   toggle [name]        Connect if not connected, otherwise disconnect
+  status [name]        Print connection state; exit 0 if connected, 3 if not
   help, --help, -h     Show help
+  version, --version   Show version
+
+Options:
+  --wait <seconds>     Poll for the device to appear before acting (default 0)
+  --json               Machine-readable output (list, status)
+  --quiet, -q          Suppress progress lines (errors still print)
+  --no-sidebar         Connect without the on-screen sidebar
+  --no-touchbar        Connect without the on-screen Touch Bar
 ```
 
 `name` is an optional, case-insensitive substring of the device name. With no `name`, the
@@ -117,31 +129,29 @@ lid screen dead**, as long as you're logged in.
 
 ## Optional: auto-reconnect on login
 
-Want Sidecar to come up automatically every time you log in? Create a LaunchAgent at
-`~/Library/LaunchAgents/com.user.sidecar-connect.plist`:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>          <string>com.user.sidecar-connect</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/sidecar-connect</string>
-        <string>connect</string>
-        <string>iPad</string>
-    </array>
-    <key>RunAtLoad</key>      <true/>
-</dict>
-</plist>
-```
-
-Load it with:
+Want Sidecar to come up automatically every time you log in? There's a make target for it:
 
 ```sh
-launchctl load ~/Library/LaunchAgents/com.user.sidecar-connect.plist
+make install-agent              # installs to /usr/local — may need sudo
+# or, user-local:
+make install-agent PREFIX="$HOME/.local"
+```
+
+This installs the binary, writes a LaunchAgent to
+`~/Library/LaunchAgents/com.user.sidecar-connect.plist` (with the correct install path baked
+in), and loads it for your session. The agent runs `connect iPad --wait 60 --quiet` at login —
+the `--wait` is what makes it reliable, since the iPad usually isn't discovered the instant you
+log in.
+
+If your device isn't called "iPad", edit the name in
+`~/Library/LaunchAgents/com.user.sidecar-connect.plist` (or in
+[`dist/com.user.sidecar-connect.plist`](dist/com.user.sidecar-connect.plist) before installing),
+then re-run `make install-agent`.
+
+Remove it later with:
+
+```sh
+make uninstall-agent
 ```
 
 ## Troubleshooting
